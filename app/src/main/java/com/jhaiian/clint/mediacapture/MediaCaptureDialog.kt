@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
@@ -28,7 +29,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -413,7 +413,7 @@ private fun MediaCaptureRow(media: DetectedMedia, pageUrl: String, onCopyLink: (
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Filled.VolumeOff,
+                        Icons.AutoMirrored.Filled.VolumeOff,
                         contentDescription = stringResource(R.string.media_capture_no_audio_badge),
                         tint = colors.secondaryText,
                         modifier = Modifier.size(12.dp)

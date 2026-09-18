@@ -9,6 +9,7 @@ import android.media.MediaFormat
 import androidx.media3.common.Format
 import androidx.media3.muxer.BufferInfo
 import androidx.media3.muxer.Mp4Muxer
+import androidx.media3.muxer.SeekableMuxerOutput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
@@ -232,7 +233,7 @@ object MediaRemuxer {
 
         val outputStream = FileOutputStream(outputPath)
         val muxer = try {
-            Mp4Muxer.Builder(outputStream)
+            Mp4Muxer.Builder(SeekableMuxerOutput.of(outputStream))
                 .setAttemptStreamableOutputEnabled(false)
                 .setSampleBatchingEnabled(true)
                 .build()
