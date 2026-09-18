@@ -7,7 +7,7 @@ plugins {
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
+if (localPropertiesFile.exists()
     localPropertiesFile.inputStream().use { stream ->
         localProperties.load(stream)
     }
