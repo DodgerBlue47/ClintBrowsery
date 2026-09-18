@@ -8,11 +8,16 @@ import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.webkit.ServiceWorkerClientCompat
+import androidx.webkit.ServiceWorkerControllerCompat
 import androidx.webkit.UserAgentMetadata
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.jhaiian.clint.downloads.ClintDownloadManager
+import com.jhaiian.clint.mediacapture.MEDIA_CAPTURE_ENABLED_PREF
+import com.jhaiian.clint.mediacapture.MediaCaptureDetector
+import com.jhaiian.clint.mediacapture.MediaCaptureStore
 import com.jhaiian.clint.quiver.engine.QuiverGuardWebIntegration
 import com.jhaiian.clint.tabs.BrowserTab
 import com.jhaiian.clint.userscripts.UserScriptEngine
@@ -112,6 +117,23 @@ internal fun MainActivity.createWebView(isIncognito: Boolean): WebView {
         WebViewCompat.addDocumentStartJavaScript(webView, loadJsAsset("disable_autoplay.js"), setOf("*"))
     }
     return webView
+}
+
+internal fun MainActivity.installServiceWorkerMediaCapture() {
+    if (!WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_BASIC_USAGE) ||
+        !WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST)
+    ) return
+    ServiceWorkerControllerCompat.getInstance().setServiceWorkerClient(object : ServiceWorkerClientCompat() {
+        override fun shouldInterceptRequest(request: android.webkit.WebResourceRequest): android.webkit.WebResourceResponse? {
+            if (prefs.getBoolean(MEDIA_CAPTURE_ENABLED_PREF, true)) {
+                val tabId = tabManager.activeTab?.id
+                if (tabId != null) {
+                    MediaCaptureDetector.onRequestObserved(tabId, MediaCaptureStore.pageUrlFor(tabId), request)
+                }
+            }
+            return null
+        }
+    })
 }
 
 internal fun MainActivity.buildDesktopHeaders(): Map<String, String>? {

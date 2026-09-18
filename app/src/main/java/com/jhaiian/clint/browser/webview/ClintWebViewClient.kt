@@ -17,6 +17,8 @@ import android.webkit.WebViewClient
 import com.jhaiian.clint.R
 import com.jhaiian.clint.blocker.engine.WebsiteBlockerEngine
 import com.jhaiian.clint.blocker.engine.WebsiteBlockerWebIntegration
+import com.jhaiian.clint.mediacapture.MediaCaptureDetector
+import com.jhaiian.clint.mediacapture.MediaCaptureStore
 import com.jhaiian.clint.quiver.engine.QuiverGuardWebIntegration
 import com.jhaiian.clint.settings.sitepermissions.SitePermissionDatabase
 import com.jhaiian.clint.settings.sitepermissions.SitePermissionManager
@@ -81,15 +83,18 @@ class ClintWebViewClient(
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         cachedPageUrl = url
+        MediaCaptureStore.updatePageUrl(getTabId(), url)
         pendingHeaderLoad = null
 
         exceptionCacheValid = false
+        MediaCaptureStore.clearForTab(getTabId())
         if (isActive()) onPageStartedCallback(url)
     }
 
     override fun onPageFinished(view: WebView, url: String) {
         super.onPageFinished(view, url)
         cachedPageUrl = url
+        MediaCaptureStore.updatePageUrl(getTabId(), url)
         onTabUrlUpdatedCallback(view, url)
         if (isActive()) onPageFinishedCallback(url)
     }
@@ -97,6 +102,8 @@ class ClintWebViewClient(
     override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
         super.doUpdateVisitedHistory(view, url, isReload)
         cachedPageUrl = url
+        MediaCaptureStore.updatePageUrl(getTabId(), url)
+        MediaCaptureStore.clearForTab(getTabId())
         onTabUrlUpdatedCallback(view, url)
     }
 
@@ -335,6 +342,10 @@ class ClintWebViewClient(
         request: WebResourceRequest
     ): WebResourceResponse? {
         if (request.url.host == null) return super.shouldInterceptRequest(view, request)
+
+        if (prefs.getBoolean(com.jhaiian.clint.mediacapture.MEDIA_CAPTURE_ENABLED_PREF, true)) {
+            MediaCaptureDetector.onRequestObserved(getTabId(), cachedPageUrl, request)
+        }
 
         val websiteBlockerEnabled = prefs.getBoolean("website_blocker_enabled", false)
         if (request.isForMainFrame && WebsiteBlockerEngine.isActive && websiteBlockerEnabled) {

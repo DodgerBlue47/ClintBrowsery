@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Splitscreen
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.VideoSettings
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Wifi
 
 import androidx.compose.foundation.clickable
@@ -79,6 +81,7 @@ fun DownloadSettingsScreen(
     onConcurrentDownloadsChange: (Int) -> Unit,
     onSplitPartsChange: (Int) -> Unit,
     onMultithreadingPartsChange: (Int) -> Unit,
+    onConcurrentSegmentsChange: (Int) -> Unit,
     onSpeedLimitConfirm: (amount: Int, unit: String) -> Unit,
     onRetryEnabledClick: () -> Unit,
     onRetryUnrecoverableClick: () -> Unit,
@@ -86,7 +89,8 @@ fun DownloadSettingsScreen(
     onRetryIntervalConfirm: (Int) -> Unit,
     onIgnoreBatteryOptClick: () -> Unit,
     onGrantAllFilesAccessClick: () -> Unit,
-    onPushNotificationsClick: () -> Unit
+    onPushNotificationsClick: () -> Unit,
+    onKeepScreenOnClick: () -> Unit
 ) {
     val colors = LocalClintColors.current
     val context = LocalContext.current
@@ -265,6 +269,20 @@ fun DownloadSettingsScreen(
             )
         }
 
+        SectionLabel(stringResource(R.string.download_section_stream_segments), colors.primary, Modifier.padding(start = 4.dp, bottom = 8.dp))
+        SettingsSection(colors.cardBackground) {
+            SliderSettingsCard(
+                icon = androidx.compose.material.icons.Icons.Filled.VideoSettings,
+                title = stringResource(R.string.download_concurrent_segments_title),
+                description = stringResource(R.string.download_concurrent_segments_desc),
+                value = state.concurrentSegments,
+                valueRange = 1..8,
+                summary = pluralStringResource(R.plurals.download_concurrent_segments_value, state.concurrentSegments, state.concurrentSegments),
+                colors = colors,
+                onValueChange = onConcurrentSegmentsChange
+            )
+        }
+
         SectionLabel(stringResource(R.string.download_section_speed_limit), colors.primary, Modifier.padding(start = 4.dp, bottom = 8.dp))
         SettingsSection(colors.cardBackground) {
             val unitLabel = stringResource(if (state.speedLimitUnit == SPEED_LIMIT_UNIT_MB) R.string.speed_limit_unit_mb else R.string.speed_limit_unit_kb)
@@ -322,6 +340,18 @@ fun DownloadSettingsScreen(
                 colors = colors,
                 enabled = state.retryEnabled,
                 onClick = { if (state.retryEnabled) state.openDialog = DownloadSettingsDialog.RETRY_INTERVAL }
+            )
+        }
+
+        SectionLabel(stringResource(R.string.download_section_general), colors.primary, Modifier.padding(start = 4.dp, bottom = 8.dp))
+        SettingsSection(colors.cardBackground) {
+            SettingsRow(
+                icon = androidx.compose.material.icons.Icons.Filled.Visibility,
+                title = stringResource(R.string.download_keep_screen_on_title),
+                summary = stringResource(R.string.download_keep_screen_on_summary),
+                colors = colors,
+                onClick = onKeepScreenOnClick,
+                trailing = { ClintSwitch(checked = state.keepScreenOn) }
             )
         }
 

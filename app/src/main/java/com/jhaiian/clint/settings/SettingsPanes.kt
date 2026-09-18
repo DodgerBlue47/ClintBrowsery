@@ -301,7 +301,8 @@ fun BrowserSettingsPane(activity: SettingsActivity) {
             initialFramelessShortcut = prefs.getBoolean("shortcut_frameless_enabled", true),
             initialHideStatusBar = prefs.getBoolean("hide_status_bar", false),
             initialHideSystemNavigation = prefs.getBoolean("hide_system_navigation", false),
-            initialIncognitoSearchHistory = prefs.getBoolean("incognito_search_history_enabled", false)
+            initialIncognitoSearchHistory = prefs.getBoolean("incognito_search_history_enabled", false),
+            initialCustomSelectMenus = prefs.getBoolean("custom_select_menus_enabled", true)
         )
     }
     var confirmDialog by remember { mutableStateOf<ConfirmDialogConfig?>(null) }
@@ -318,6 +319,7 @@ fun BrowserSettingsPane(activity: SettingsActivity) {
         uiState.hideStatusBar = prefs.getBoolean("hide_status_bar", false)
         uiState.hideSystemNavigation = prefs.getBoolean("hide_system_navigation", false)
         uiState.incognitoSearchHistory = prefs.getBoolean("incognito_search_history_enabled", false)
+        uiState.customSelectMenus = prefs.getBoolean("custom_select_menus_enabled", true)
     }
 
     fun confirmEngine(engine: String) {
@@ -411,6 +413,12 @@ fun BrowserSettingsPane(activity: SettingsActivity) {
         uiState.incognitoSearchHistory = newValue
     }
 
+    fun onCustomSelectMenusRowClicked() {
+        val newValue = !uiState.customSelectMenus
+        prefs.edit().putBoolean("custom_select_menus_enabled", newValue).apply()
+        uiState.customSelectMenus = newValue
+    }
+
     BrowserSettingsScreen(
         state = uiState,
         onSearchEngineConfirmed = ::onSearchEngineConfirmed,
@@ -428,7 +436,8 @@ fun BrowserSettingsPane(activity: SettingsActivity) {
         onIncognitoSearchHistoryRowClicked = ::onIncognitoSearchHistoryRowClicked,
         onUserScriptsRowClicked = {
             activity.startActivity(android.content.Intent(activity, com.jhaiian.clint.userscripts.UserScriptsActivity::class.java))
-        }
+        },
+        onCustomSelectMenusRowClicked = ::onCustomSelectMenusRowClicked
     )
     ConfirmDialogHost(confirmDialog, uiState.hideStatusBar, uiState.hideSystemNavigation) { confirmDialog = null }
 }
@@ -797,6 +806,7 @@ fun DownloadSettingsPane(activity: SettingsActivity) {
             initialConcurrentDownloads = prefs.getInt(DownloadSettingsKeys.PREF_CONCURRENT_DOWNLOADS, DownloadSettingsKeys.DEFAULT_CONCURRENT_DOWNLOADS),
             initialSplitParts = prefs.getInt(DownloadSettingsKeys.PREF_SPLIT_PARTS, DownloadSettingsKeys.DEFAULT_SPLIT_PARTS),
             initialMultithreadingParts = prefs.getInt(DownloadSettingsKeys.PREF_MULTITHREADING_PARTS, DownloadSettingsKeys.DEFAULT_MULTITHREADING_PARTS),
+            initialConcurrentSegments = prefs.getInt(DownloadSettingsKeys.PREF_STREAM_CONCURRENT_SEGMENTS, DownloadSettingsKeys.DEFAULT_STREAM_CONCURRENT_SEGMENTS),
             initialSpeedLimitAmount = prefs.getInt(DownloadSettingsKeys.PREF_SPEED_LIMIT_AMOUNT, DownloadSettingsKeys.DEFAULT_SPEED_LIMIT_AMOUNT),
             initialSpeedLimitUnit = prefs.getString(DownloadSettingsKeys.PREF_SPEED_LIMIT_UNIT, DEFAULT_SPEED_LIMIT_UNIT) ?: DEFAULT_SPEED_LIMIT_UNIT,
             initialRetryEnabled = prefs.getBoolean(DownloadSettingsKeys.PREF_RETRY_ENABLED, DownloadSettingsKeys.DEFAULT_RETRY_ENABLED),
@@ -807,6 +817,7 @@ fun DownloadSettingsPane(activity: SettingsActivity) {
             initialShowGrantAllFilesAccessRow = showGrantAllFilesAccessRow(),
             initialAllFilesAccessGranted = isAllFilesAccessGranted(),
             initialPushNotifications = prefs.getBoolean(DownloadSettingsKeys.PREF_PUSH_NOTIFICATIONS, DownloadSettingsKeys.DEFAULT_PUSH_NOTIFICATIONS),
+            initialKeepScreenOn = prefs.getBoolean(DownloadSettingsKeys.PREF_KEEP_SCREEN_ON, DownloadSettingsKeys.DEFAULT_KEEP_SCREEN_ON),
             initialHideStatusBar = prefs.getBoolean("hide_status_bar", false),
             initialHideSystemNavigation = prefs.getBoolean("hide_system_navigation", false)
         )
@@ -919,6 +930,10 @@ fun DownloadSettingsPane(activity: SettingsActivity) {
             prefs.edit().putInt(DownloadSettingsKeys.PREF_MULTITHREADING_PARTS, value).apply()
             uiState.multithreadingParts = value
         },
+        onConcurrentSegmentsChange = { value ->
+            prefs.edit().putInt(DownloadSettingsKeys.PREF_STREAM_CONCURRENT_SEGMENTS, value).apply()
+            uiState.concurrentSegments = value
+        },
         onSpeedLimitConfirm = { amount, unit ->
             prefs.edit().putInt(DownloadSettingsKeys.PREF_SPEED_LIMIT_AMOUNT, amount).putString(DownloadSettingsKeys.PREF_SPEED_LIMIT_UNIT, unit).apply()
             uiState.speedLimitAmount = amount
@@ -961,6 +976,11 @@ fun DownloadSettingsPane(activity: SettingsActivity) {
             val newValue = !uiState.pushNotifications
             prefs.edit().putBoolean(DownloadSettingsKeys.PREF_PUSH_NOTIFICATIONS, newValue).apply()
             uiState.pushNotifications = newValue
+        },
+        onKeepScreenOnClick = {
+            val newValue = !uiState.keepScreenOn
+            prefs.edit().putBoolean(DownloadSettingsKeys.PREF_KEEP_SCREEN_ON, newValue).apply()
+            uiState.keepScreenOn = newValue
         }
     )
 }

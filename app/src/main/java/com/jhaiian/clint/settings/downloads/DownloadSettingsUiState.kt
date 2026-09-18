@@ -21,6 +21,7 @@ class DownloadSettingsUiState(
     initialConcurrentDownloads: Int,
     initialSplitParts: Int,
     initialMultithreadingParts: Int,
+    initialConcurrentSegments: Int,
     initialSpeedLimitAmount: Int,
     initialSpeedLimitUnit: String,
     initialRetryEnabled: Boolean,
@@ -31,6 +32,7 @@ class DownloadSettingsUiState(
     initialShowGrantAllFilesAccessRow: Boolean,
     initialAllFilesAccessGranted: Boolean,
     initialPushNotifications: Boolean,
+    initialKeepScreenOn: Boolean,
     initialHideStatusBar: Boolean,
 initialHideSystemNavigation: Boolean
 ) {
@@ -47,6 +49,7 @@ initialHideSystemNavigation: Boolean
     var concurrentDownloads by mutableStateOf(initialConcurrentDownloads)
     var splitParts by mutableStateOf(initialSplitParts)
     var multithreadingParts by mutableStateOf(initialMultithreadingParts)
+    var concurrentSegments by mutableStateOf(initialConcurrentSegments)
 
     var speedLimitAmount by mutableStateOf(initialSpeedLimitAmount)
     var speedLimitUnit by mutableStateOf(initialSpeedLimitUnit)
@@ -62,6 +65,7 @@ initialHideSystemNavigation: Boolean
     var allFilesAccessGranted by mutableStateOf(initialAllFilesAccessGranted)
 
     var pushNotifications by mutableStateOf(initialPushNotifications)
+    var keepScreenOn by mutableStateOf(initialKeepScreenOn)
     var hideStatusBar by mutableStateOf(initialHideStatusBar)
     var hideSystemNavigation by mutableStateOf(initialHideSystemNavigation)
 

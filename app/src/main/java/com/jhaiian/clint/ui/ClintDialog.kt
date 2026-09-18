@@ -146,3 +146,40 @@ fun ClintDialog(
         }
     }
 }
+
+@Composable
+fun ClintTitlelessDialog(
+    hideStatusBar: Boolean, hideSystemNavigation: Boolean,
+    onDismiss: () -> Unit,
+    cancelable: Boolean = true,
+    footer: @Composable () -> Unit = { ClintDialogCancelFooter(onDismiss) },
+    scrollState: ScrollState = rememberScrollState(),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val colors = LocalClintColors.current
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true,
+            dismissOnBackPress = cancelable,
+            dismissOnClickOutside = cancelable
+        )
+    ) {
+        ClintDialogStatusBarEffect(hideStatusBar, hideSystemNavigation)
+        BoxWithConstraints {
+            val maxContentHeight = (maxHeight - ClintDialogChromeHeight)
+                .coerceIn(0.dp, ClintDialogContentMaxHeight)
+            Surface(shape = RoundedCornerShape(24.dp), color = colors.popupBackground) {
+                Column {
+                    Column(
+                        Modifier
+                            .heightIn(max = maxContentHeight)
+                            .verticalScroll(scrollState)
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                    ) { content() }
+                    footer()
+                }
+            }
+        }
+    }
+}

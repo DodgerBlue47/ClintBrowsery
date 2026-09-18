@@ -119,6 +119,30 @@ internal object DownloadNotificationHelper {
                 progress = 0
                 showPause = true
             }
+            DownloadStatus.DECRYPTING -> {
+                val total = item.segmentsTotal.coerceAtLeast(1)
+                statusText = context.getString(R.string.download_status_decrypting)
+                metaText = context.getString(R.string.download_status_segment_progress, item.segmentsCompleted, item.segmentsTotal)
+                indeterminate = false
+                progress = item.segmentsCompleted * 100 / total
+                showPause = false
+            }
+            DownloadStatus.MUXING -> {
+                val pct = item.muxProgress
+                statusText = context.getString(R.string.download_status_muxing, pct)
+                metaText = null
+                indeterminate = pct <= 0
+                progress = pct
+                showPause = false
+            }
+            DownloadStatus.CONVERTING -> {
+                val pct = item.muxProgress
+                statusText = context.getString(R.string.download_status_converting, pct)
+                metaText = null
+                indeterminate = pct <= 0
+                progress = pct
+                showPause = false
+            }
             else -> {
                 val pct = item.progressPercent
                 val downloaded = formatFileSize(item.bytesDownloaded)
@@ -130,7 +154,10 @@ internal object DownloadNotificationHelper {
                 } else {
                     context.getString(R.string.download_status_progress_indeterminate, downloaded)
                 }
-                metaText = buildSpeedEtaText(context, item)
+                val speedEtaText = buildSpeedEtaText(context, item)
+                val segmentText = if (item.segmentsTotal > 0) context.getString(R.string.download_status_segment_progress, item.segmentsCompleted, item.segmentsTotal) else null
+                val combinedMeta = listOfNotNull(segmentText, speedEtaText)
+                metaText = if (combinedMeta.isEmpty()) null else combinedMeta.joinToString("  \u2022  ")
                 indeterminate = pct < 0
                 progress = pct.coerceAtLeast(0)
                 showPause = item.resumable

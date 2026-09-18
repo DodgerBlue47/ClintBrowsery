@@ -50,6 +50,7 @@ private const val BOUNCYCASTLE_URL = "https://www.bouncycastle.org"
 private const val BOUNCYCASTLE_LICENSE_URL = "https://www.bouncycastle.org/licence.html"
 private const val CODEVIEW_URL = "https://github.com/AmrDeveloper/CodeView"
 private const val CODEVIEW_LICENSE_URL = "https://opensource.org/licenses/MIT"
+private const val MEDIA3_URL = "https://developer.android.com/guide/topics/media/media3"
 
 @Composable
 private fun AboutCard(label: String, colors: ClintColors, content: @Composable () -> Unit) {
@@ -329,6 +330,12 @@ fun AboutScreen(
                 stringResource(R.string.about_library_codeview_label), stringResource(R.string.about_library_codeview_license),
                 stringResource(R.string.about_library_codeview_usage), colors,
                 { onLinkClick(CODEVIEW_URL) }, { onLinkClick(CODEVIEW_LICENSE_URL) }
+            )
+            AboutThinDivider(colors.surfaceVariant)
+            AboutLibraryEntry(
+                stringResource(R.string.about_library_media3_label), stringResource(R.string.about_library_media3_license),
+                stringResource(R.string.about_library_media3_usage), colors,
+                { onLinkClick(MEDIA3_URL) }, { onLinkClick(APACHE_2_LICENSE_URL) }
             )
         }
 

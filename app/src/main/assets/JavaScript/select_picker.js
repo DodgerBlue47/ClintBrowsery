@@ -66,7 +66,7 @@
 
     function intercept(e) {
         var target = e.target;
-        if (target && target.tagName === 'SELECT' && !target.disabled) {
+        if (target && target.tagName === 'SELECT' && !target.disabled && SelectPickerBridge.isEnabled()) {
             e.preventDefault();
             e.stopPropagation();
             target.blur();

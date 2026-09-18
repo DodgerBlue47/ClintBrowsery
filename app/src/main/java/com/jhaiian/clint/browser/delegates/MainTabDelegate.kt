@@ -201,6 +201,7 @@ internal fun MainActivity.attachActiveWebView() {
         android.view.ViewGroup.LayoutParams.MATCH_PARENT
     ))
     updateIncognitoState(tab.isIncognito)
+    uiState.activeTabId = tab.id
     updateSwipeRefreshColors(tab.isIncognito)
     updateTabCount()
     updateAddressBar(tab.webView.url ?: "")
@@ -292,6 +293,7 @@ internal fun MainActivity.closePopupTabToOpener(tab: BrowserTab): Boolean {
 
     removeDesktopScript(tab)
     onQuiverGuardTabClosed(tab)
+    com.jhaiian.clint.mediacapture.MediaCaptureStore.removeTab(tab.id)
     if (!tab.isIncognito) com.jhaiian.clint.ui.FaviconCache.evict(this, tab.url)
     TabThumbnailCache.evict(this, tab.id)
     tabManager.closeTab(closingIndex)

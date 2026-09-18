@@ -15,7 +15,8 @@ class BrowserSettingsUiState(
     initialFramelessShortcut: Boolean,
     initialHideStatusBar: Boolean,
     initialHideSystemNavigation: Boolean,
-    initialIncognitoSearchHistory: Boolean
+    initialIncognitoSearchHistory: Boolean,
+    initialCustomSelectMenus: Boolean
 ) {
     var searchEngine by mutableStateOf(initialSearchEngine)
     var customSearchEngineName by mutableStateOf(initialCustomSearchEngineName)
@@ -28,6 +29,7 @@ class BrowserSettingsUiState(
     var hideStatusBar by mutableStateOf(initialHideStatusBar)
     var hideSystemNavigation by mutableStateOf(initialHideSystemNavigation)
     var incognitoSearchHistory by mutableStateOf(initialIncognitoSearchHistory)
+    var customSelectMenus by mutableStateOf(initialCustomSelectMenus)
     var searchEngineDialogOpen by mutableStateOf(false)
     var searchSuggestionsApiDialogOpen by mutableStateOf(false)
 }

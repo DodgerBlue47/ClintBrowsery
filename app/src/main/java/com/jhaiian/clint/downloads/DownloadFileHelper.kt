@@ -103,22 +103,37 @@ internal object DownloadFileHelper {
         return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
     }
 
+    private fun sanitizeFileName(name: String): String {
+        var cleaned = name.substringAfterLast('/').substringAfterLast('\\').trim()
+        cleaned = cleaned.replace(Regex("[\\\\/:*?\"<>|\\x00-\\x1F]"), "_")
+        if (cleaned.isBlank() || cleaned.all { it == '.' }) cleaned = "download"
+        return cleaned.take(200)
+    }
+
     fun uniqueFile(dir: File, name: String): File {
-        var file = File(dir, name)
-        if (!file.exists()) return file
-        val dot = name.lastIndexOf('.')
-        val base = if (dot >= 0) name.substring(0, dot) else name
-        val ext = if (dot >= 0) name.substring(dot) else ""
+        val safeName = sanitizeFileName(name)
+        val dot = safeName.lastIndexOf('.')
+        val base = if (dot > 0) safeName.substring(0, dot) else safeName
+        val ext = if (dot > 0) safeName.substring(dot) else ""
+        var candidate = File(dir, safeName)
         var i = 1
-        while (file.exists()) { file = File(dir, "$base($i)$ext"); i++ }
-        return file
+        while (i <= 1000) {
+            try {
+                if (candidate.createNewFile()) return candidate
+            } catch (_: java.io.IOException) {
+            }
+            candidate = File(dir, "$base($i)$ext")
+            i++
+        }
+        return File(dir, "$base(${System.nanoTime()})$ext")
     }
 
     fun uniqueSafName(docDir: DocumentFile, name: String): String {
-        if (docDir.findFile(name) == null) return name
-        val dot = name.lastIndexOf('.')
-        val base = if (dot >= 0) name.substring(0, dot) else name
-        val ext = if (dot >= 0) name.substring(dot) else ""
+        val safeName = sanitizeFileName(name)
+        if (docDir.findFile(safeName) == null) return safeName
+        val dot = safeName.lastIndexOf('.')
+        val base = if (dot > 0) safeName.substring(0, dot) else safeName
+        val ext = if (dot > 0) safeName.substring(dot) else ""
         var i = 1
         var candidate = "$base($i)$ext"
         while (docDir.findFile(candidate) != null) { i++; candidate = "$base($i)$ext" }

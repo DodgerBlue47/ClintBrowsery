@@ -284,8 +284,11 @@ private fun TopToolbar(
             addressBarText = state.addressBarTextTop,
             isSecure = state.addressBarSecureTop,
             tabCountText = state.tabCountText,
+            isMediaCaptureEnabled = state.isMediaCaptureEnabled,
+            activeTabId = state.activeTabId,
             onAddressBarClick = { activity.openSearchOverlay(isBottom = false) },
             onTabCountClick = onTabCountClick,
+            onMediaCaptureClick = { activity.mountMediaCaptureDialog() },
             onSwipeTabChange = { direction -> activity.onSwipeTabChange(direction) }
         )
         if (state.isPageLoading) {
@@ -337,8 +340,11 @@ private fun BottomToolbar(
             addressBarText = state.addressBarTextBottom,
             isSecure = state.addressBarSecureBottom,
             tabCountText = state.tabCountText,
+            isMediaCaptureEnabled = state.isMediaCaptureEnabled,
+            activeTabId = state.activeTabId,
             onAddressBarClick = { activity.openSearchOverlay(isBottom = true) },
             onTabCountClick = onTabCountClick,
+            onMediaCaptureClick = { activity.mountMediaCaptureDialog() },
             onSwipeTabChange = { direction -> activity.onSwipeTabChange(direction) }
         )
     }

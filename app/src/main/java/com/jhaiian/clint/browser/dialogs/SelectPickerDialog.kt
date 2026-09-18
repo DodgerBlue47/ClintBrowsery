@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import com.jhaiian.clint.R
 import com.jhaiian.clint.ui.ClintCheckbox
-import com.jhaiian.clint.ui.ClintDialog
+import com.jhaiian.clint.ui.ClintTitlelessDialog
 import com.jhaiian.clint.ui.ClintDialogCancelFooter
 import com.jhaiian.clint.ui.ClintRadioButton
 import com.jhaiian.clint.ui.theme.LocalClintColors
@@ -55,11 +55,11 @@ data class SelectPickerRequest(
 @Composable
 internal fun SelectPickerDialog(request: SelectPickerRequest, hideStatusBar: Boolean, hideSystemNavigation: Boolean, onDismiss: () -> Unit) {
     val colors = LocalClintColors.current
-    val selectedValues = remember(request) {
+    val selectedValues = remember(request.id) {
         mutableStateListOf<String>().apply { addAll(request.options.filter { it.selected }.map { it.value }) }
     }
     val scrollState = rememberScrollState()
-    var selectedRowOffset by remember(request) { mutableStateOf<Int?>(null) }
+    var selectedRowOffset by remember(request.id) { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(selectedRowOffset) {
         selectedRowOffset?.let { offset -> scrollState.scrollTo(offset.coerceIn(0, scrollState.maxValue)) }
@@ -73,8 +73,7 @@ internal fun SelectPickerDialog(request: SelectPickerRequest, hideStatusBar: Boo
         webView.evaluateJavascript("window.__clintApplySelect && window.__clintApplySelect('$safeId', $quotedJson)", null)
     }
 
-    ClintDialog(
-        title = request.title.ifBlank { stringResource(R.string.select_picker_default_title) },
+    ClintTitlelessDialog(
         hideStatusBar = hideStatusBar, hideSystemNavigation = hideSystemNavigation,
         onDismiss = onDismiss,
         scrollState = scrollState,

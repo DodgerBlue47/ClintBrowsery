@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -24,6 +25,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jhaiian.clint.base.ClintActivity
+import com.jhaiian.clint.settings.downloads.DownloadSettingsKeys
 import com.jhaiian.clint.ui.ClintSnackbarHost
 import com.jhaiian.clint.ui.OverlayHostActivity
 import com.jhaiian.clint.ui.SnackbarHostActivity
@@ -99,17 +101,8 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
     private fun submitManualDownload(submission: ManualDownloadSubmission, onDismiss: () -> Unit, onRename: () -> Unit) {
         val ua = android.webkit.WebSettings.getDefaultUserAgent(this)
         performManualDownload(
-            url = submission.url,
-            filename = submission.filename,
+            submission = submission,
             userAgent = ua,
-            retryEnabled = submission.retryEnabled,
-            unmeteredOnly = submission.unmeteredOnly,
-            splitParts = submission.splitParts,
-            multithreadingParts = submission.multithreadingParts,
-            speedLimitBytesPerSec = submission.speedLimitBytesPerSec,
-            locationMode = submission.locationMode,
-            customLocationUri = submission.customLocationUri,
-            scheduledStartAtMillis = submission.scheduledStartAtMillis,
             onDismiss = {
                 showClintSnackbar(
                     message = getString(R.string.toast_downloading, submission.filename),
@@ -139,6 +132,16 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
             ClintComposeTheme(theme = theme) {
                 val maxContentWidth = rememberMaxContentWidth(this)
                 val allItems by ClintDownloadManager.downloadsFlow.collectAsState()
+
+                LaunchedEffect(allItems) {
+                    val keepScreenOnEnabled = prefs.getBoolean(DownloadSettingsKeys.PREF_KEEP_SCREEN_ON, DownloadSettingsKeys.DEFAULT_KEEP_SCREEN_ON)
+                    val hasPendingDownloads = allItems.any { it.status in DownloadStatus.NOT_FINISHED }
+                    if (keepScreenOnEnabled && hasPendingDownloads) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    }
+                }
 
                 var tick by remember { mutableStateOf(0L) }
                 LaunchedEffect(Unit) {
@@ -207,14 +210,14 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
     }
 
     private fun pathFor(item: DownloadItem): String = when {
-        item.file != null -> item.file!!.absolutePath
+        item.file != null -> item.file.absolutePath
         item.contentUri != null -> {
             val uri = Uri.parse(item.contentUri)
-            val seg = uri.lastPathSegment ?: item.contentUri!!
+            val seg = uri.lastPathSegment ?: item.contentUri
             when {
                 seg.startsWith("primary:") -> "/storage/emulated/0/${seg.removePrefix("primary:")}"
                 seg.contains(":") -> { val p = seg.split(":", limit = 2); "/storage/${p[0]}/${p[1]}" }
-                else -> item.contentUri!!
+                else -> item.contentUri
             }
         }
         else -> item.filename
@@ -256,7 +259,7 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
     internal fun handleOpenItem(item: DownloadItem) {
         if (item.status != DownloadStatus.COMPLETE) return
         val ext = when {
-            item.file != null -> item.file!!.extension.lowercase()
+            item.file != null -> item.file.extension.lowercase()
             item.contentUri != null -> item.filename.substringAfterLast('.').lowercase()
             else -> return
         }
@@ -293,7 +296,7 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
 
     private fun launchApkInstall(item: DownloadItem) {
         val uri = when {
-            item.file != null -> FileProvider.getUriForFile(this, "$packageName.fileprovider", item.file!!)
+            item.file != null -> FileProvider.getUriForFile(this, "$packageName.fileprovider", item.file)
             item.contentUri != null -> Uri.parse(item.contentUri)
             else -> return
         }
@@ -343,7 +346,7 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
 
     private fun shareFile(item: DownloadItem) {
         val uri = when {
-            item.file != null -> FileProvider.getUriForFile(this, "$packageName.fileprovider", item.file!!)
+            item.file != null -> FileProvider.getUriForFile(this, "$packageName.fileprovider", item.file)
             item.contentUri != null -> Uri.parse(item.contentUri)
             else -> return
         }
@@ -361,7 +364,7 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
     private fun openFolder(item: DownloadItem) {
         when {
             item.file != null -> {
-                val parent = item.file!!.parentFile ?: return
+                val parent = item.file.parentFile ?: return
                 val standardDownloads = android.os.Environment
                     .getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                 val isStandardDownloads = try {
@@ -467,17 +470,17 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
 
     private fun copyFilePath(item: DownloadItem) {
         val path = when {
-            item.file != null -> item.file!!.absolutePath
+            item.file != null -> item.file.absolutePath
             item.contentUri != null -> {
                 val uri = Uri.parse(item.contentUri)
-                val segment = uri.lastPathSegment ?: item.contentUri!!
+                val segment = uri.lastPathSegment ?: item.contentUri
                 when {
                     segment.startsWith("primary:") -> "/storage/emulated/0/${segment.removePrefix("primary:")}"
                     segment.contains(":") -> {
                         val parts = segment.split(":", limit = 2)
                         "/storage/${parts[0]}/${parts[1]}"
                     }
-                    else -> item.contentUri!!
+                    else -> item.contentUri
                 }
             }
             else -> return
@@ -493,7 +496,7 @@ class DownloadsActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActi
         val ext = item.filename.substringAfterLast('.').lowercase()
         val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "*/*"
         val uri = when {
-            item.file != null -> FileProvider.getUriForFile(this, "$packageName.fileprovider", item.file!!)
+            item.file != null -> FileProvider.getUriForFile(this, "$packageName.fileprovider", item.file)
             item.contentUri != null -> Uri.parse(item.contentUri)
             else -> return
         }

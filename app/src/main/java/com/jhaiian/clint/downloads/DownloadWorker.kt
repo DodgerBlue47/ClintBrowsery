@@ -126,7 +126,7 @@ internal object DownloadWorker {
 
             if (isResumingFile && !serverAcceptedRange) {
                 item = item.copy(bytesDownloaded = 0L, resumable = false, file = null)
-                withContext(Dispatchers.IO) { initialItem.file?.delete() }
+                withContext(Dispatchers.IO) { initialItem.file.delete() }
             }
 
             val effectiveResume = isResumingFile && serverAcceptedRange
@@ -245,13 +245,18 @@ internal object DownloadWorker {
 
     private suspend fun handlePauseTransition(context: Context, item: DownloadItem) {
         var paused = finalizeElapsed(item)
-        paused = paused.copy(status = DownloadStatus.PAUSED, speedBytesPerSec = 0L)
+        val waitingForSchedule = paused.id in DownloadScheduleMonitor.scheduleWaitingIds
+        val waitingForUnmetered = !waitingForSchedule && paused.id in DownloadNetworkMonitor.unmeteredPausedIds
+        paused = paused.copy(
+            status = DownloadStatus.PAUSED, speedBytesPerSec = 0L,
+            waitingForSchedule = waitingForSchedule, waitingForUnmetered = waitingForUnmetered
+        )
         ClintDownloadManager.persistDownload(paused)
         ClintDownloadManager.publish(paused)
         context.getSystemService(NotificationManager::class.java).cancel(paused.id)
-        if (paused.id in DownloadScheduleMonitor.scheduleWaitingIds) {
+        if (waitingForSchedule) {
             DownloadNotificationHelper.showWaitingScheduleNotification(context, paused)
-        } else if (paused.id in DownloadNetworkMonitor.unmeteredPausedIds) {
+        } else if (waitingForUnmetered) {
             DownloadNotificationHelper.showWaitingUnmeteredNotification(context, paused)
         } else {
             DownloadNotificationHelper.showPausedNotification(context, paused)
@@ -881,7 +886,7 @@ internal object DownloadWorker {
                 status = DownloadStatus.RETRYING,
                 retryDelaySec = retryInterval.toInt(),
                 lastErrorWasServerError = serverError,
-                errorMessage = null,
+                errorMessage = displayMsg,
                 speedBytesPerSec = 0L
             )
             ClintDownloadManager.persistDownload(item)
@@ -898,7 +903,11 @@ internal object DownloadWorker {
             } else {
                 item = item.copy(retryDelaySec = 0)
                 ClintDownloadManager.publish(item)
-                run(context, item)
+                if (item.isStream) {
+                    com.jhaiian.clint.mediacapture.download.StreamDownloadJob.run(context, item)
+                } else {
+                    run(context, item)
+                }
             }
         } else if (item.id !in ClintDownloadManager.removedIds) {
             item = item.copy(

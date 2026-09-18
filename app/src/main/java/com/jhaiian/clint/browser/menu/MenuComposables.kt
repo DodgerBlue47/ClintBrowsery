@@ -100,6 +100,8 @@ internal data class BrowserMenuSnapshot(
     val isDesktopMode: Boolean,
     val isDataSaverEnabled: Boolean,
     val pendingDownloadCount: Long,
+    val mediaCaptureCount: Long,
+    val isMediaCaptureEnabled: Boolean,
     val isUserScriptsEnabled: Boolean,
     val isQuiverGuardEnabled: Boolean,
     val quiverGuardBlockedCount: Long,
@@ -124,6 +126,7 @@ internal class BrowserMenuActions(
     val onCreateShortcut: () -> Unit,
     val onDownloads: () -> Unit,
     val onOpenDownloadSettings: () -> Unit,
+    val onMediaCapture: () -> Unit,
     val onUserScripts: () -> Unit,
     val onOpenUserScriptsSettings: () -> Unit,
     val onBookmarks: () -> Unit,
@@ -173,6 +176,8 @@ internal fun MainActivity.buildMenuSnapshot(): BrowserMenuSnapshot {
         isDataSaverEnabled = prefs.getBoolean("data_saver_enabled", false),
         pendingDownloadCount = ClintDownloadManager.downloadsFlow.value
             .count { it.status in DownloadStatus.RUNNING_OR_QUEUED }.toLong(),
+        mediaCaptureCount = com.jhaiian.clint.mediacapture.MediaCaptureStore.countForTab(tabManager.activeTab?.id).toLong(),
+        isMediaCaptureEnabled = prefs.getBoolean(com.jhaiian.clint.mediacapture.MEDIA_CAPTURE_ENABLED_PREF, true),
         isUserScriptsEnabled = UserScriptState.isEnabled(this),
         isQuiverGuardEnabled = prefs.getBoolean("quiver_guard_enabled", false),
         quiverGuardBlockedCount = tabManager.activeTab?.id?.let { BlockedRequestCounter.getTabCount(it) } ?: 0L,
@@ -198,6 +203,7 @@ internal fun MainActivity.buildMenuActions(dismiss: () -> Unit): BrowserMenuActi
     onCreateShortcut = { dismiss(); onMenuCreateShortcut() },
     onDownloads = { dismiss(); onMenuDownloads() },
     onOpenDownloadSettings = { dismiss(); onMenuOpenDownloadSettings() },
+    onMediaCapture = { dismiss(); onMenuMediaCapture() },
     onUserScripts = { dismiss(); onMenuUserScripts() },
     onOpenUserScriptsSettings = { dismiss(); onMenuOpenUserScriptsSettings() },
     onBookmarks = { dismiss(); onMenuBookmarks() },
@@ -374,6 +380,12 @@ private fun MenuItemRowFor(item: CustomizableMenuItem, snapshot: BrowserMenuSnap
             badge = if (snapshot.pendingDownloadCount > 0L) BlockedRequestCounter.formatCount(snapshot.pendingDownloadCount) else null,
             onClick = actions.onDownloads,
             onLongClick = actions.onOpenDownloadSettings
+        )
+        CustomizableMenuItem.MEDIA_CAPTURE -> MenuItemRow(
+            item.icon(),
+            stringResource(item.titleRes()),
+            checked = snapshot.isMediaCaptureEnabled,
+            onClick = actions.onMediaCapture
         )
         CustomizableMenuItem.USER_SCRIPTS -> MenuItemRow(
             item.icon(),

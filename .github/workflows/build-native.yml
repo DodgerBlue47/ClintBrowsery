@@ -18,6 +18,7 @@ permissions:
 
 env:
   CRATE_DIR: native/quiverguard-jni
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:

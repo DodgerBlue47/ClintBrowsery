@@ -21,7 +21,13 @@ class DownloadScheduleWorker(appContext: Context, params: WorkerParameters) :
     private fun foregroundInfo(): ForegroundInfo {
         ClintDownloadManager.createNotificationChannel(applicationContext)
         val notification = DownloadNotificationHelper.buildSummaryNotification(applicationContext, 0)
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ForegroundInfo(
+                DownloadForegroundService.FOREGROUND_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ForegroundInfo(DownloadForegroundService.FOREGROUND_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
             ForegroundInfo(DownloadForegroundService.FOREGROUND_ID, notification)

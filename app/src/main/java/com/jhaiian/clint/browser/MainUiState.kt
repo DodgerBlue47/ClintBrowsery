@@ -47,6 +47,8 @@ internal class MainUiState {
 
     var tabCountText by mutableStateOf("1")
     var isIncognito by mutableStateOf(false)
+    var isMediaCaptureEnabled by mutableStateOf(true)
+    var activeTabId by mutableStateOf<String?>(null)
 
     var topBarFraction by mutableFloatStateOf(0f)
     var bottomBarFraction by mutableFloatStateOf(0f)

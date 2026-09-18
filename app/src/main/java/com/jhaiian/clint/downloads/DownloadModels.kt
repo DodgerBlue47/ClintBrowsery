@@ -3,65 +3,86 @@ package com.jhaiian.clint.downloads
 import java.io.File
 
 enum class DownloadStatus {
-    QUEUED, CONNECTING, ALLOCATING, DOWNLOADING, RETRYING, COPYING_TEMP, DELETING_TEMP, PAUSED, FAILED, COMPLETE;
+    QUEUED, CONNECTING, ALLOCATING, DOWNLOADING, RETRYING, DECRYPTING, MUXING, CONVERTING, COPYING_TEMP, DELETING_TEMP, PAUSED, FAILED, COMPLETE;
 
     companion object {
 
         val ACTIVELY_WORKING: Set<DownloadStatus> =
-            setOf(CONNECTING, DOWNLOADING, ALLOCATING, COPYING_TEMP, DELETING_TEMP, RETRYING)
+            setOf(CONNECTING, DOWNLOADING, ALLOCATING, DECRYPTING, MUXING, CONVERTING, COPYING_TEMP, DELETING_TEMP, RETRYING)
 
         val NOT_FINISHED: Set<DownloadStatus> =
-            setOf(QUEUED, CONNECTING, ALLOCATING, DOWNLOADING, RETRYING, COPYING_TEMP, DELETING_TEMP, PAUSED)
+            setOf(QUEUED, CONNECTING, ALLOCATING, DOWNLOADING, RETRYING, DECRYPTING, MUXING, CONVERTING, COPYING_TEMP, DELETING_TEMP, PAUSED)
 
         val RUNNING_OR_QUEUED: Set<DownloadStatus> =
-            setOf(QUEUED, CONNECTING, ALLOCATING, DOWNLOADING, COPYING_TEMP, DELETING_TEMP)
+            setOf(QUEUED, CONNECTING, ALLOCATING, DOWNLOADING, DECRYPTING, MUXING, CONVERTING, COPYING_TEMP, DELETING_TEMP)
     }
 }
 
 data class DownloadItem(
     val id: Int,
-    var url: String,
-    var filename: String,
+    val url: String,
+    val filename: String,
     val userAgent: String,
     val referer: String = "",
     val cookies: String = "",
-    var bytesDownloaded: Long = 0L,
-    var totalBytes: Long = -1L,
-    var status: DownloadStatus = DownloadStatus.DOWNLOADING,
-    var file: File? = null,
-    var errorMessage: String? = null,
-    var startedAt: Long = 0L,
-    var speedBytesPerSec: Long = 0L,
-    var resumable: Boolean = false,
-    var copyProgress: Int = 0,
-    var contentUri: String? = null,
-    var retryAttempt: Int = 0,
-    var retryDelaySec: Int = 0,
-    var allocationProgress: Int = 0,
-    var waitingForUnmetered: Boolean = false,
-    var waitingForNetwork: Boolean = false,
-    var waitingForSchedule: Boolean = false,
+    val bytesDownloaded: Long = 0L,
+    val totalBytes: Long = -1L,
+    val status: DownloadStatus = DownloadStatus.DOWNLOADING,
+    val file: File? = null,
+    val errorMessage: String? = null,
+    val startedAt: Long = 0L,
+    val speedBytesPerSec: Long = 0L,
+    val resumable: Boolean = false,
+    val copyProgress: Int = 0,
+    val contentUri: String? = null,
+    val retryAttempt: Int = 0,
+    val retryDelaySec: Int = 0,
+    val allocationProgress: Int = 0,
+    val waitingForUnmetered: Boolean = false,
+    val waitingForNetwork: Boolean = false,
+    val waitingForSchedule: Boolean = false,
 
-    var scheduledStartAtMillis: Long = 0L,
+    val scheduledStartAtMillis: Long = 0L,
 
-    var waitingForCustomSchedule: Boolean = false,
-    var activeElapsedMs: Long = 0L,
-    @Transient var activeStartedAt: Long = 0L,
-    @Transient var parallelRateLimited: Boolean = false,
-    var completedAt: Long = 0L,
-    var retryEnabled: Boolean = true,
-    var lastErrorWasServerError: Boolean = false,
-    var unmeteredOnly: Boolean = false,
-    var splitParts: Int = 32,
-    var multithreadingParts: Int = 4,
+    val waitingForCustomSchedule: Boolean = false,
+    val activeElapsedMs: Long = 0L,
+    @Transient val activeStartedAt: Long = 0L,
+    @Transient val parallelRateLimited: Boolean = false,
+    val completedAt: Long = 0L,
+    val retryEnabled: Boolean = true,
+    val lastErrorWasServerError: Boolean = false,
+    val unmeteredOnly: Boolean = false,
+    val splitParts: Int = 32,
+    val multithreadingParts: Int = 4,
 
-    var speedLimitBytesPerSec: Long = 0L,
-    var locationMode: String = "default",
-    var customLocationUri: String? = null,
+    val speedLimitBytesPerSec: Long = 0L,
+    val locationMode: String = "default",
+    val customLocationUri: String? = null,
 
-    var completedPartsMask: Long = 0L,
+    val completedPartsMask: Long = 0L,
 
-    var partOffsets: String = ""
+    val partOffsets: String = "",
+
+    val isStream: Boolean = false,
+    val streamVideoUrl: String = "",
+    val streamAudioUrl: String? = null,
+    val streamSubtitleUrl: String? = null,
+    val streamFormat: String = "",
+    val streamPageUrl: String = "",
+    val streamVideoWidth: Int? = null,
+    val streamVideoHeight: Int? = null,
+    val streamVideoBandwidth: Long? = null,
+    val streamAudioBandwidth: Long? = null,
+    val streamPrimaryIsAudio: Boolean = false,
+    val streamNoAudio: Boolean = false,
+    val streamHeaders: Map<String, String> = emptyMap(),
+    val streamConcurrentSegments: Int = 6,
+    val streamIsLive: Boolean = false,
+    val streamVideoRepresentationId: String? = null,
+    val streamAudioRepresentationId: String? = null,
+    val segmentsCompleted: Int = 0,
+    val segmentsTotal: Int = 0,
+    val muxProgress: Int = 0
 ) {
     val progressPercent: Int
         get() = if (totalBytes > 0) ((bytesDownloaded * 100) / totalBytes).toInt() else -1

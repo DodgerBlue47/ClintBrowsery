@@ -122,6 +122,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+### AndroidX Media3
+- **Author:** Google
+- **License:** [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+- **URL:** https://developer.android.com/guide/topics/media/media3
+- Used (`media3-muxer`, `media3-common`) alongside the platform `MediaExtractor` to remux downloaded video and audio tracks into a single file, entirely in the JVM with no native code.
+
 ---
 
 ## Bundled Resources & Derived Content

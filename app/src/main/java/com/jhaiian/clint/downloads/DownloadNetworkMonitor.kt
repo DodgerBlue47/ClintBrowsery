@@ -114,13 +114,13 @@ internal object DownloadNetworkMonitor {
             it.unmeteredOnly && (
                 it.status == DownloadStatus.DOWNLOADING ||
                 it.status == DownloadStatus.CONNECTING ||
-                it.status == DownloadStatus.ALLOCATING
+                it.status == DownloadStatus.ALLOCATING ||
+                it.status == DownloadStatus.RETRYING
             )
         }
         active.forEach { item ->
-            ClintDownloadManager.updateItem(item.id) { it.copy(waitingForUnmetered = true) }
             unmeteredPausedIds.add(item.id)
-            ClintDownloadManager.pause(context, item.id)
+            ClintDownloadManager.pauseForUnmeteredWait(context, item.id)
         }
     }
 

@@ -295,6 +295,7 @@ class MainActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActivity 
             "block_third_party_cookies" -> applyCookiePolicy()
             "custom_user_agent" -> applyUserAgent()
             "quiver_guard_enabled" -> onQuiverGuardEnabled(prefs.getBoolean("quiver_guard_enabled", false))
+            com.jhaiian.clint.mediacapture.MEDIA_CAPTURE_ENABLED_PREF -> updateMediaCaptureEnabledState()
             "user_scripts_enabled" -> applyUserScripts()
             "data_saver_enabled", "data_saver_disable_images", "data_saver_disable_autoplay" -> applyDataSaverSettings()
             "hide_bars_on_scroll" -> {
@@ -333,6 +334,7 @@ class MainActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActivity 
             return
         }
         prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        updateMediaCaptureEnabledState()
         tabManager.framelessShortcutsEnabled = prefs.getBoolean("shortcut_frameless_enabled", true)
         lastUserScriptsDataVersion = com.jhaiian.clint.userscripts.UserScriptState.getDataVersion(this)
         applySystemUiVisibility()
@@ -350,6 +352,7 @@ class MainActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActivity 
         ClintDownloadManager.init(this)
         initializeQuiverGuardEngine()
         initializeWebsiteBlockerEngine()
+        installServiceWorkerMediaCapture()
         observeQuiverGuardCounter()
         createWebNotificationChannel()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -590,6 +593,7 @@ class MainActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActivity 
         tab?.let {
             removeDesktopScript(it)
             onQuiverGuardTabClosed(it)
+            com.jhaiian.clint.mediacapture.MediaCaptureStore.removeTab(it.id)
             if (!it.isIncognito) com.jhaiian.clint.ui.FaviconCache.evict(this, it.url)
             com.jhaiian.clint.tabs.TabThumbnailCache.evict(this, it.id)
         }
@@ -710,6 +714,10 @@ class MainActivity : ClintActivity(), OverlayHostActivity, SnackbarHostActivity 
     }
     fun onMenuOpenUserScriptsSettings() {
         startActivity(android.content.Intent(this, com.jhaiian.clint.userscripts.UserScriptsActivity::class.java))
+    }
+    fun onMenuMediaCapture() {
+        val enabled = !prefs.getBoolean(com.jhaiian.clint.mediacapture.MEDIA_CAPTURE_ENABLED_PREF, true)
+        prefs.edit().putBoolean(com.jhaiian.clint.mediacapture.MEDIA_CAPTURE_ENABLED_PREF, enabled).apply()
     }
     fun onMenuQuiverGuard() {
         val enabled = !prefs.getBoolean("quiver_guard_enabled", false)
@@ -938,6 +946,9 @@ td,th{border:1px solid $secondaryColor;padding:6px 8px;}
     }
 
     inner class SelectPickerBridge(private val webView: android.webkit.WebView) {
+        @android.webkit.JavascriptInterface
+        fun isEnabled(): Boolean = prefs.getBoolean("custom_select_menus_enabled", true)
+
         @android.webkit.JavascriptInterface
         fun onSelectOpen(id: String, optionsJson: String, multiple: Boolean, title: String) {
             runOnUiThread {

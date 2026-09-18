@@ -384,6 +384,12 @@ internal fun MainActivity.updateIncognitoState(isIncognito: Boolean) {
     uiState.isIncognito = isIncognito
 }
 
+internal fun MainActivity.updateMediaCaptureEnabledState() {
+    uiState.isMediaCaptureEnabled = prefs.getBoolean(
+        com.jhaiian.clint.mediacapture.MEDIA_CAPTURE_ENABLED_PREF, true
+    )
+}
+
 internal fun MainActivity.updateSwipeRefreshColors(isIncognito: Boolean) {
     swipeRefreshView.setProgressBackgroundColorSchemeColor(
         getThemeColor(com.google.android.material.R.attr.colorSurface)

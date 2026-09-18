@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.jhaiian.clint.R
@@ -26,6 +27,7 @@ enum class CustomizableMenuItem(val id: String) {
     OPEN_IN_APP("open_in_app"),
     CREATE_SHORTCUT("create_shortcut"),
     DOWNLOADS("downloads"),
+    MEDIA_CAPTURE("media_capture"),
     USER_SCRIPTS("userscripts"),
     QUIVER_GUARD("quiver_guard"),
     DISABLE_QUIVER_GUARD_FOR_SITE("disable_quiver_guard_for_site"),
@@ -49,6 +51,7 @@ fun CustomizableMenuItem.icon(): ImageVector = when (this) {
     CustomizableMenuItem.OPEN_IN_APP -> Icons.AutoMirrored.Filled.OpenInNew
     CustomizableMenuItem.CREATE_SHORTCUT -> Icons.AutoMirrored.Filled.AddToHomeScreen
     CustomizableMenuItem.DOWNLOADS -> Icons.Filled.Download
+    CustomizableMenuItem.MEDIA_CAPTURE -> Icons.Filled.VideoLibrary
     CustomizableMenuItem.USER_SCRIPTS -> Icons.Filled.Code
     CustomizableMenuItem.QUIVER_GUARD -> Icons.Filled.Security
     CustomizableMenuItem.DISABLE_QUIVER_GUARD_FOR_SITE -> Icons.Filled.Security
@@ -67,6 +70,7 @@ fun CustomizableMenuItem.titleRes(): Int = when (this) {
     CustomizableMenuItem.OPEN_IN_APP -> R.string.menu_open_in_app
     CustomizableMenuItem.CREATE_SHORTCUT -> R.string.menu_create_shortcut
     CustomizableMenuItem.DOWNLOADS -> R.string.menu_downloads
+    CustomizableMenuItem.MEDIA_CAPTURE -> R.string.menu_media_capture
     CustomizableMenuItem.USER_SCRIPTS -> R.string.user_scripts_title
     CustomizableMenuItem.QUIVER_GUARD -> R.string.menu_quiver_guard
     CustomizableMenuItem.DISABLE_QUIVER_GUARD_FOR_SITE -> R.string.menu_disable_quiver_guard_for_site

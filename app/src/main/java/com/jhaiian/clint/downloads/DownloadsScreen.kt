@@ -117,7 +117,9 @@ fun DownloadsScreen(
                 onMultiRemove = { onDeleteSelectedClick(selectedItems) },
                 onMultiCopyLink = { onMultiCopyLink(selectedItems) },
                 onMultiCopyFilename = { onMultiCopyFilename(selectedItems) },
-                onMultiCopyPath = { onMultiCopyPath(selectedItems) }
+                onMultiCopyPath = { onMultiCopyPath(selectedItems) },
+                onResumeAll = { allItems.filter { it.status == DownloadStatus.PAUSED }.forEach { onResume(it.id) } },
+                onPauseAll = { allItems.filter { it.status in DownloadStatus.ACTIVELY_WORKING || it.status == DownloadStatus.QUEUED }.forEach { onPause(it.id) } }
             )
 
             if (!state.isSearchMode) {
@@ -259,7 +261,9 @@ private fun DownloadsToolbar(
     onMultiRemove: () -> Unit,
     onMultiCopyLink: () -> Unit,
     onMultiCopyFilename: () -> Unit,
-    onMultiCopyPath: () -> Unit
+    onMultiCopyPath: () -> Unit,
+    onResumeAll: () -> Unit,
+    onPauseAll: () -> Unit
 ) {
     val colors = LocalClintColors.current
     val showToolbarIcons = !state.isInSelectionMode && !state.isSearchMode
@@ -312,6 +316,17 @@ private fun DownloadsToolbar(
                 }
                 IconButton(onClick = onDownloadSettingsClick) {
                     Icon(androidx.compose.material.icons.Icons.Filled.Settings, contentDescription = stringResource(R.string.download_settings_title), tint = colors.iconTint)
+                }
+                Box {
+                    IconButton(onClick = { state.overflowMenuOpen = true }) {
+                        Icon(androidx.compose.material.icons.Icons.Filled.MoreVert, contentDescription = stringResource(R.string.downloads_overflow_menu_desc), tint = colors.iconTint)
+                    }
+                    DownloadsOverflowMenu(
+                        expanded = state.overflowMenuOpen,
+                        onDismiss = { state.overflowMenuOpen = false },
+                        onResumeAll = onResumeAll,
+                        onPauseAll = onPauseAll
+                    )
                 }
             }
             if (state.isInSelectionMode) {

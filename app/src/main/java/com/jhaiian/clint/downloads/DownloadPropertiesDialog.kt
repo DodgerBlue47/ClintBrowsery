@@ -71,7 +71,7 @@ fun DownloadPropertiesDialog(
     val dateCompletedStr = if (item.completedAt > 0L) formatPropTimestamp(item.completedAt) else dash
     val yes = stringResource(R.string.download_props_yes)
     val no = stringResource(R.string.download_props_no)
-    val canComputeHash = item.file != null && item.file!!.exists()
+    val canComputeHash = item.file != null && item.file.exists()
     val isComplete = item.status == DownloadStatus.COMPLETE
 
     fun copy(value: String) {
@@ -248,11 +248,11 @@ private fun formatPropTimestamp(millis: Long): String {
 private fun resolvePropertiesPath(context: Context, item: DownloadItem, dash: String): String = when {
     item.contentUri != null -> {
         val uri = Uri.parse(item.contentUri)
-        val seg = uri.lastPathSegment ?: item.contentUri!!
+        val seg = uri.lastPathSegment ?: item.contentUri
         when {
             seg.startsWith("primary:") -> "/storage/emulated/0/${seg.removePrefix("primary:")}"
             seg.contains(":") -> { val p = seg.split(":", limit = 2); "/storage/${p[0]}/${p[1]}" }
-            else -> item.contentUri!!
+            else -> item.contentUri
         }
     }
     item.locationMode == com.jhaiian.clint.settings.downloads.DownloadSettingsKeys.MODE_CUSTOM -> {
@@ -266,6 +266,6 @@ private fun resolvePropertiesPath(context: Context, item: DownloadItem, dash: St
             }
         } else item.file?.absolutePath ?: dash
     }
-    item.file != null -> item.file!!.absolutePath
+    item.file != null -> item.file.absolutePath
     else -> dash
 }

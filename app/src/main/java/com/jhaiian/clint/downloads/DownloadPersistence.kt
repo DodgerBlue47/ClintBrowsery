@@ -160,7 +160,7 @@ internal object DownloadPersistence {
                 put(DownloadDatabase.COL_TOTAL_BYTES, item.totalBytes)
                 put(DownloadDatabase.COL_STATUS, item.status.name)
                 put(DownloadDatabase.COL_RESUMABLE, if (item.resumable) 1 else 0)
-                if (item.file != null) put(DownloadDatabase.COL_FILE_PATH, item.file!!.absolutePath)
+                if (item.file != null) put(DownloadDatabase.COL_FILE_PATH, item.file.absolutePath)
                 else putNull(DownloadDatabase.COL_FILE_PATH)
                 if (item.errorMessage != null) put(DownloadDatabase.COL_ERROR_MESSAGE, item.errorMessage)
                 else putNull(DownloadDatabase.COL_ERROR_MESSAGE)
@@ -189,14 +189,16 @@ internal object DownloadPersistence {
     }
 
     fun checkpointProgress(context: Context, id: Int, bytesDownloaded: Long, completedPartsMask: Long, partOffsets: String) {
-        val values = ContentValues().apply {
-            put(DownloadDatabase.COL_BYTES_DOWNLOADED, bytesDownloaded)
-            put(DownloadDatabase.COL_COMPLETED_PARTS_MASK, completedPartsMask)
-            put(DownloadDatabase.COL_PART_OFFSETS, partOffsets)
+        runCatching {
+            val values = ContentValues().apply {
+                put(DownloadDatabase.COL_BYTES_DOWNLOADED, bytesDownloaded)
+                put(DownloadDatabase.COL_COMPLETED_PARTS_MASK, completedPartsMask)
+                put(DownloadDatabase.COL_PART_OFFSETS, partOffsets)
+            }
+            db(context).writableDatabase.update(
+                DownloadDatabase.TABLE, values, "${DownloadDatabase.COL_ID} = ?", arrayOf(id.toString())
+            )
         }
-        db(context).writableDatabase.update(
-            DownloadDatabase.TABLE, values, "${DownloadDatabase.COL_ID} = ?", arrayOf(id.toString())
-        )
     }
 
     suspend fun deletePersistedDownload(context: Context, id: Int) = withContext(Dispatchers.IO) {

@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SwapVert
@@ -70,6 +72,26 @@ fun DownloadsSortMenu(
         ListMenuItem(androidx.compose.material.icons.Icons.Filled.ArrowDownward, stringResource(R.string.history_sort_descending), sortOrder == ListSortOrder.DESCENDING) {
             onDismiss(); onSortDescending()
         }
+    }
+}
+
+@Composable
+fun DownloadsOverflowMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onResumeAll: () -> Unit,
+    onPauseAll: () -> Unit
+) {
+    val colors = LocalClintColors.current
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        shape = PopupShape,
+        containerColor = colors.popupBackground,
+        border = BorderStroke(1.dp, colors.popupStroke)
+    ) {
+        ListMenuItem(androidx.compose.material.icons.Icons.Filled.PlayArrow, stringResource(R.string.downloads_resume_all), false) { onDismiss(); onResumeAll() }
+        ListMenuItem(androidx.compose.material.icons.Icons.Filled.Pause, stringResource(R.string.downloads_pause_all), false) { onDismiss(); onPauseAll() }
     }
 }
 

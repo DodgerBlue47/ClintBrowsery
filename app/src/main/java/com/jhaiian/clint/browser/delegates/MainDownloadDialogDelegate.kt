@@ -112,7 +112,7 @@ private fun MainActivity.copyDownloadRequestLink(text: String) {
     }
 }
 
-private fun MainActivity.mountDownloadRequestDialog(
+internal fun MainActivity.mountDownloadRequestDialog(
     url: String,
     onCopyLink: () -> Unit,
     initialFilename: String,
@@ -123,6 +123,9 @@ private fun MainActivity.mountDownloadRequestDialog(
     checkStorage: Boolean,
     showOptions: Boolean,
     showStorageInfo: Boolean = showOptions,
+    showSplitAndMultithreading: Boolean = showOptions,
+    showConcurrentSegments: Boolean = false,
+    initialConcurrentSegments: Int = 6,
     initialLocationMode: String,
     initialCustomUri: Uri?,
     initialRetryEnabled: Boolean = false,
@@ -154,6 +157,9 @@ private fun MainActivity.mountDownloadRequestDialog(
                 checkStorage = checkStorage,
                 showOptions = showOptions,
                 showStorageInfo = showStorageInfo,
+                showSplitAndMultithreading = showSplitAndMultithreading,
+                showConcurrentSegments = showConcurrentSegments,
+                initialConcurrentSegments = initialConcurrentSegments,
                 initialLocationMode = initialLocationMode,
                 initialCustomUri = initialCustomUri,
                 initialRetryEnabled = initialRetryEnabled,

@@ -27,11 +27,15 @@ object DownloadSettingsKeys {
     const val DEFAULT_SPLIT_PARTS          = 32
     const val PREF_MULTITHREADING_PARTS    = "download_multithreading_parts"
     const val DEFAULT_MULTITHREADING_PARTS = 4
+    const val PREF_STREAM_CONCURRENT_SEGMENTS    = "stream_concurrent_segments"
+    const val DEFAULT_STREAM_CONCURRENT_SEGMENTS = 6
     const val PREF_SPEED_LIMIT_AMOUNT      = "download_speed_limit_amount"
     const val DEFAULT_SPEED_LIMIT_AMOUNT   = 0
     const val PREF_SPEED_LIMIT_UNIT        = "download_speed_limit_unit"
     const val PREF_PUSH_NOTIFICATIONS      = "download_push_notifications"
     const val DEFAULT_PUSH_NOTIFICATIONS   = true
+    const val PREF_KEEP_SCREEN_ON          = "download_keep_screen_on"
+    const val DEFAULT_KEEP_SCREEN_ON       = false
     const val PREF_DOWNLOAD_MANAGER        = "download_manager_app"
     const val DEFAULT_DOWNLOAD_MANAGER     = com.jhaiian.clint.downloads.DownloadManagerAppIds.CLINT
 }

@@ -1,6 +1,6 @@
 package com.jhaiian.clint.downloads
 
-internal class SpeedLimiter(initialLimitBytesPerSec: Long) {
+class SpeedLimiter(initialLimitBytesPerSec: Long) {
 
     @Volatile
     private var limitBytesPerSec: Long = initialLimitBytesPerSec
@@ -20,10 +20,10 @@ internal class SpeedLimiter(initialLimitBytesPerSec: Long) {
 
     fun acquire(bytes: Int) {
         if (bytes <= 0) return
-        synchronized(lock) {
-            if (limitBytesPerSec <= 0L) return
-            var remaining = bytes.toDouble()
-            while (remaining > 0.0) {
+        var remaining = bytes.toDouble()
+        while (remaining > 0.0) {
+            val waitMs: Long
+            synchronized(lock) {
                 val limit = limitBytesPerSec
                 if (limit <= 0L) return
                 val now = System.nanoTime()
@@ -33,13 +33,14 @@ internal class SpeedLimiter(initialLimitBytesPerSec: Long) {
                 if (availableTokens >= remaining) {
                     availableTokens -= remaining
                     remaining = 0.0
+                    waitMs = 0L
                 } else {
                     remaining -= availableTokens
                     availableTokens = 0.0
-                    val waitMs = ((remaining / limit) * 1000.0).toLong().coerceAtLeast(1L)
-                    Thread.sleep(waitMs)
+                    waitMs = ((remaining / limit) * 1000.0).toLong().coerceAtLeast(1L)
                 }
             }
+            if (waitMs > 0L) Thread.sleep(waitMs)
         }
     }
 }

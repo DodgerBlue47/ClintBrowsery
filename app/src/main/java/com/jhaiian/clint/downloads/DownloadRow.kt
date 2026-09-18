@@ -1,4 +1,17 @@
 package com.jhaiian.clint.downloads
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.Slideshow
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Subtitles
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FolderZip
@@ -86,33 +99,33 @@ fun DownloadRow(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         item.filename,
-                        color = colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Medium,
+                        color = colors.onSurface, fontSize = 10.sp, fontWeight = FontWeight.Medium,
                         maxLines = 1, softWrap = false, overflow = TextOverflow.MiddleEllipsis,
                         modifier = Modifier.weight(1f)
                     )
                     if (display.resumableText != null) {
                         Text(
-                            display.resumableText, color = colors.secondaryText, fontSize = 10.sp, maxLines = 1,
+                            display.resumableText, color = colors.secondaryText, fontSize = 9.sp, maxLines = 1,
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 2.dp)) {
                     Text(
-                        display.statusText, color = colors.secondaryText, fontSize = 10.sp,
+                        display.statusText, color = colors.secondaryText, fontSize = 9.sp,
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
                     )
                     if (display.metaText != null) {
                         Text(
-                            display.metaText, color = colors.secondaryText, fontSize = 10.sp, maxLines = 1,
-                            modifier = Modifier.padding(start = 6.dp)
+                            display.metaText, color = colors.secondaryText, fontSize = 9.sp, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 6.dp)
                         )
                     }
                 }
                 if (display.retryHintText != null) {
                     Text(
-                        display.retryHintText, color = colors.secondaryText, fontSize = 10.sp,
-                        lineHeight = 13.sp, modifier = Modifier.padding(top = 5.dp)
+                        display.retryHintText, color = colors.secondaryText, fontSize = 9.sp,
+                        lineHeight = 12.sp, modifier = Modifier.padding(top = 5.dp)
                     )
                 }
             }
@@ -213,6 +226,7 @@ private fun downloadRowDisplay(
             val delaySec = item.retryDelaySec
             val pct = item.progressPercent
             val statusText = when {
+                !item.errorMessage.isNullOrBlank() -> item.errorMessage
                 item.bytesDownloaded > 0 && pct >= 0 && item.totalBytes > 0 ->
                     context.getString(R.string.download_status_progress, pct, formatFileSize(item.bytesDownloaded), formatFileSize(item.totalBytes))
                 item.bytesDownloaded > 0 && pct >= 0 ->
@@ -232,20 +246,58 @@ private fun downloadRowDisplay(
             )
         }
         DownloadStatus.DOWNLOADING -> {
-            val pct = item.progressPercent
+            val isSegmented = item.segmentsTotal > 0
+            val pct = if (isSegmented) (item.segmentsCompleted * 100 / item.segmentsTotal) else item.progressPercent
             val downloaded = formatFileSize(item.bytesDownloaded)
             val statusText = if (pct >= 0) {
                 if (item.totalBytes > 0) context.getString(R.string.download_status_progress, pct, downloaded, formatFileSize(item.totalBytes))
                 else context.getString(R.string.download_status_progress_unknown_total, pct, downloaded)
             } else context.getString(R.string.download_status_progress_indeterminate, downloaded)
+            val speedEtaText = buildSpeedEtaText(context, item)
+            val segmentText = if (isSegmented) context.getString(R.string.download_status_segment_progress, item.segmentsCompleted, item.segmentsTotal) else null
+            val combinedMeta = listOfNotNull(segmentText, speedEtaText)
             RowDisplay(
                 statusText = statusText,
-                metaText = buildSpeedEtaText(context, item),
+                metaText = if (combinedMeta.isEmpty()) null else combinedMeta.joinToString("  \u2022  "),
                 retryHintText = null,
                 resumableText = resumableText(),
                 cardProgress = if (pct >= 0) DownloadCardProgress.Determinate(pct / 100f) else DownloadCardProgress.Indeterminate,
                 pauseIconRes = if (item.resumable) androidx.compose.material.icons.Icons.Filled.Pause else null, pauseContentDesc = pauseDesc,
                 pauseAction = if (item.resumable) { { onPause(item.id) } } else null,
+                moreVisible = false
+            )
+        }
+        DownloadStatus.DECRYPTING -> {
+            val total = item.segmentsTotal.coerceAtLeast(1)
+            val pct = item.segmentsCompleted * 100 / total
+            RowDisplay(
+                statusText = context.getString(R.string.download_status_segment_progress, item.segmentsCompleted, item.segmentsTotal),
+                metaText = context.getString(R.string.download_status_decrypting),
+                retryHintText = null, resumableText = null,
+                cardProgress = DownloadCardProgress.Determinate(pct / 100f),
+                pauseIconRes = null, pauseContentDesc = "", pauseAction = null,
+                moreVisible = false
+            )
+        }
+        DownloadStatus.MUXING -> {
+            val pct = item.muxProgress
+            RowDisplay(
+                statusText = if (item.totalBytes > 0) formatFileSize(item.totalBytes) else "",
+                metaText = context.getString(R.string.download_status_muxing, pct),
+                retryHintText = null, resumableText = null,
+                cardProgress = if (pct > 0) DownloadCardProgress.Determinate(pct / 100f) else DownloadCardProgress.Indeterminate,
+                pauseIconRes = null, pauseContentDesc = "", pauseAction = null,
+                moreVisible = false
+            )
+        }
+        DownloadStatus.CONVERTING -> {
+            val pct = item.muxProgress
+            RowDisplay(
+                statusText = if (item.totalBytes > 0) formatFileSize(item.totalBytes) else "",
+                metaText = context.getString(R.string.download_status_converting, pct),
+                retryHintText = null, resumableText = null,
+                cardProgress = if (pct > 0) DownloadCardProgress.Determinate(pct / 100f) else DownloadCardProgress.Indeterminate,
+                pauseIconRes = null, pauseContentDesc = "", pauseAction = null,
                 moreVisible = false
             )
         }
@@ -355,22 +407,50 @@ private fun fileTypeIconRes(filename: String): androidx.compose.ui.graphics.pain
     return when (ext) {
         "jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif",
         "heic", "heif", "avif", "svg", "ico", "raw", "cr2", "nef",
-        "orf", "arw", "dng" -> androidx.compose.material.icons.Icons.Filled.Image.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "orf", "arw", "dng", "jfif", "jp2", "tga" -> androidx.compose.material.icons.Icons.Filled.Image.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
         "mp4", "mkv", "webm", "avi", "mov", "wmv", "flv", "ts",
         "m4v", "3gp", "3g2", "rmvb", "vob", "ogv", "mts", "m2ts",
-        "divx", "xvid", "f4v", "asf", "mpg", "mpeg", "m2v" -> androidx.compose.material.icons.Icons.Filled.VideoFile.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
-        "apk", "apks", "apkm", "xapk", "apkz" -> androidx.compose.material.icons.Icons.Filled.InstallMobile.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "divx", "xvid", "f4v", "asf", "mpg", "mpeg", "m2v",
+        "mxf", "ogm" -> androidx.compose.material.icons.Icons.Filled.VideoFile.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "apk", "apks", "apkm", "xapk", "apkz", "aab" -> androidx.compose.material.icons.Icons.Filled.InstallMobile.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
         "mp3", "wav", "flac", "ogg", "m4a", "aac", "opus", "wma",
         "aiff", "aif", "alac", "ape", "mka", "mid", "midi",
-        "amr", "caf", "dsd", "dsf", "dff", "ra", "rm" -> androidx.compose.material.icons.Icons.Filled.AudioFile.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "amr", "caf", "dsd", "dsf", "dff", "ra", "rm",
+        "spx", "voc" -> androidx.compose.material.icons.Icons.Filled.AudioFile.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
         "zip", "7z", "rar", "gz", "tar", "bz2", "xz", "lz4",
         "zst", "br", "cab", "iso", "tgz", "tbz2", "txz",
-        "z", "lzma", "lzh", "arj", "ace", "sit" -> androidx.compose.material.icons.Icons.Filled.FolderZip.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
-        "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-        "odt", "ods", "odp", "odg", "odf", "rtf", "csv",
-        "txt", "md", "markdown", "log", "json", "xml", "html",
-        "htm", "epub", "mobi", "azw", "azw3", "djvu", "pages",
-        "numbers", "key", "tex", "srt", "vtt", "ass", "sub" -> androidx.compose.material.icons.Icons.Filled.Description.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "z", "lzma", "lzh", "arj", "ace", "sit",
+        "cpio", "xar" -> androidx.compose.material.icons.Icons.Filled.FolderZip.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "pdf" -> androidx.compose.material.icons.Icons.Filled.PictureAsPdf.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "xls", "xlsx", "xlsm", "ods", "csv", "tsv",
+        "numbers" -> androidx.compose.material.icons.Icons.Filled.TableChart.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "ppt", "pptx", "pptm", "odp", "key" -> androidx.compose.material.icons.Icons.Filled.Slideshow.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "doc", "docx", "docm", "odt", "rtf", "pages", "txt",
+        "md", "markdown", "log", "wpd",
+        "odf" -> androidx.compose.material.icons.Icons.Filled.Description.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "epub", "mobi", "azw", "azw3", "azw4", "fb2", "djvu",
+        "cbz", "cbr" -> androidx.compose.material.icons.Icons.AutoMirrored.Filled.MenuBook.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "srt", "vtt", "ass", "sub", "ssa", "sbv",
+        "smi" -> androidx.compose.material.icons.Icons.Filled.Subtitles.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "kt", "kts", "java", "py", "js", "mjs", "jsx", "tsx",
+        "c", "cpp", "cc", "h", "hpp", "cs", "go", "rs", "rb",
+        "php", "swift", "sh", "ps1", "lua", "sql", "yaml", "yml",
+        "toml", "ini", "cfg", "conf", "gradle", "json", "xml",
+        "html", "htm", "css", "scss", "less", "vue", "dart",
+        "tex" -> androidx.compose.material.icons.Icons.Filled.Code.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "ttf", "otf", "woff", "woff2",
+        "eot" -> androidx.compose.material.icons.Icons.Filled.FontDownload.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "psd", "ai", "xd", "sketch", "fig", "indd", "eps",
+        "odg" -> androidx.compose.material.icons.Icons.Filled.Palette.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "db", "sqlite", "sqlite3", "mdb", "accdb",
+        "dbf" -> androidx.compose.material.icons.Icons.Filled.Storage.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "exe", "msi", "msix", "dmg", "pkg", "deb", "rpm",
+        "appimage", "run", "bat", "com",
+        "jar" -> androidx.compose.material.icons.Icons.Filled.Apps.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "pem", "crt", "cer", "pfx", "p12", "der", "csr",
+        "gpg", "pgp", "asc" -> androidx.compose.material.icons.Icons.Filled.Lock.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "ics", "ical", "vcs", "vcf" -> androidx.compose.material.icons.Icons.Filled.Event.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
+        "torrent" -> androidx.compose.material.icons.Icons.Filled.CloudDownload.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) }
         else -> androidx.compose.ui.res.painterResource(R.drawable.ic_file_other_24)
     }
 }

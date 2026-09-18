@@ -69,7 +69,8 @@ data class DownloadRequestSubmission(
     val speedLimitBytesPerSec: Long,
     val locationMode: String,
     val customLocationUri: String?,
-    val scheduledStartAtMillis: Long
+    val scheduledStartAtMillis: Long,
+    val concurrentSegments: Int
 )
 
 @Composable
@@ -86,6 +87,9 @@ fun DownloadRequestDialog(
     showOptions: Boolean,
     showSchedule: Boolean = showOptions,
     showStorageInfo: Boolean = showOptions,
+    showSplitAndMultithreading: Boolean = showOptions,
+    showConcurrentSegments: Boolean = false,
+    initialConcurrentSegments: Int = 6,
     initialLocationMode: String,
     initialCustomUri: Uri?,
     initialRetryEnabled: Boolean = false,
@@ -141,6 +145,7 @@ fun DownloadRequestDialog(
     var unmeteredOnly by remember { mutableStateOf(initialUnmeteredOnly) }
     var splitParts by remember { mutableStateOf(initialSplitParts.coerceIn(1, 32)) }
     var multithreadingParts by remember { mutableStateOf(initialMultithreadingParts.coerceIn(1, 8)) }
+    var concurrentSegments by remember { mutableStateOf(initialConcurrentSegments.coerceIn(1, 8)) }
 
     var speedLimitText by remember { mutableStateOf(if (initialSpeedLimitAmount > 0) initialSpeedLimitAmount.toString() else "") }
     val kbLabel = stringResource(R.string.speed_limit_unit_kb)
@@ -212,7 +217,8 @@ fun DownloadRequestDialog(
                             speedLimitBytesPerSec = speedLimitBytesPerSec,
                             locationMode = locationMode,
                             customLocationUri = customUri?.toString(),
-                            scheduledStartAtMillis = effectiveScheduledMillis
+                            scheduledStartAtMillis = effectiveScheduledMillis,
+                            concurrentSegments = concurrentSegments
                         )
                         onSubmit(submission, onDismiss) {
                             filenameFocusRequester.requestFocus()
@@ -338,33 +344,51 @@ fun DownloadRequestDialog(
                             ClintSwitch(checked = unmeteredOnly)
                         }
 
-                        Text(
-                            stringResource(R.string.download_split_parts_title), color = colors.onSurface,
-                            fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 12.dp)
-                        )
-                        Text(
-                            pluralStringResource(R.plurals.download_split_parts_value, splitParts, splitParts),
-                            color = colors.secondaryText, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp)
-                        )
-                        ClintSlider(
-                            value = splitParts.toFloat(),
-                            onValueChange = { splitParts = it.toInt() },
-                            valueRange = 1f..32f, steps = 30
-                        )
+                        if (showSplitAndMultithreading) {
+                            Text(
+                                stringResource(R.string.download_split_parts_title), color = colors.onSurface,
+                                fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 12.dp)
+                            )
+                            Text(
+                                pluralStringResource(R.plurals.download_split_parts_value, splitParts, splitParts),
+                                color = colors.secondaryText, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp)
+                            )
+                            ClintSlider(
+                                value = splitParts.toFloat(),
+                                onValueChange = { splitParts = it.toInt() },
+                                valueRange = 1f..32f, steps = 30
+                            )
 
-                        Text(
-                            stringResource(R.string.download_multithreading_title), color = colors.onSurface,
-                            fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 8.dp)
-                        )
-                        Text(
-                            pluralStringResource(R.plurals.download_multithreading_value, multithreadingParts, multithreadingParts),
-                            color = colors.secondaryText, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp)
-                        )
-                        ClintSlider(
-                            value = multithreadingParts.toFloat(),
-                            onValueChange = { multithreadingParts = it.toInt() },
-                            valueRange = 1f..8f, steps = 6
-                        )
+                            Text(
+                                stringResource(R.string.download_multithreading_title), color = colors.onSurface,
+                                fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 8.dp)
+                            )
+                            Text(
+                                pluralStringResource(R.plurals.download_multithreading_value, multithreadingParts, multithreadingParts),
+                                color = colors.secondaryText, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp)
+                            )
+                            ClintSlider(
+                                value = multithreadingParts.toFloat(),
+                                onValueChange = { multithreadingParts = it.toInt() },
+                                valueRange = 1f..8f, steps = 6
+                            )
+                        }
+
+                        if (showConcurrentSegments) {
+                            Text(
+                                stringResource(R.string.download_concurrent_segments_title), color = colors.onSurface,
+                                fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 12.dp)
+                            )
+                            Text(
+                                pluralStringResource(R.plurals.download_concurrent_segments_value, concurrentSegments, concurrentSegments),
+                                color = colors.secondaryText, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp)
+                            )
+                            ClintSlider(
+                                value = concurrentSegments.toFloat(),
+                                onValueChange = { concurrentSegments = it.toInt() },
+                                valueRange = 1f..8f, steps = 6
+                            )
+                        }
 
                         Text(
                             stringResource(R.string.download_dialog_speed_limit_title), color = colors.onSurface,

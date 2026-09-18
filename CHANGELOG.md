@@ -4,6 +4,90 @@ All notable changes to Clint Browser are documented here.
 
 ---
 
+# v1.1.6-beta-1
+
+---
+
+## What's New
+
+### Media Capture (Beta)
+
+You can now download media directly from webpages using Clint's new Media Capture feature.
+
+It works with normal video and audio files and also supports streaming media such as HLS/M3U8 streams. When Clint detects downloadable media on a webpage, you can easily download it and convert it to MP4 or AAC.
+
+You guys already know how this works, so I'm not going to explain it further.
+
+But yeah, this is the entire reason after so many months I finally released a beta release again, because yeah, I did some testing, but it's different if other people test it, so expect some bugs and shenanigans.
+
+---
+
+## Download Manager — Bug Fixes & Improvements
+
+- Fixed a race condition where concurrent calls to the download dequeue logic could launch two workers on the same download simultaneously, potentially corrupting the file.
+- Fixed the speed limiter holding its lock while sleeping, which was causing parallel download parts to become serialized whenever a speed limit was set. Parallel downloads now actually run in parallel while still respecting the speed limit.
+- Sanitized destination filenames to prevent path traversal through Content-Disposition headers. Also fixed a race condition where two downloads could claim the same filename at the same time.
+- Fixed custom scheduled downloads permanently bypassing the daily download window after their first run. They now bypass the window only for the specific scheduled start.
+- Fixed downloads with "Unmetered only" enabled never automatically resuming after being paused due to switching to a metered network. They now resume automatically when the network becomes unmetered again.
+- Wrapped progress checkpoint writes so a temporary database error no longer causes the entire download to fail.
+- Cleaned up a small memory leak where `removedIds` was never shrinking. Delete cleanup now also waits for the download job to fully stop before modifying the file or database.
+- Converted unused `var` fields in `DownloadItem` to `val` after verifying that there were no direct mutations anywhere in the project.
+
+---
+
+## New: Keep Screen On
+
+Added a new setting in **Download Settings**:
+
+**Keep Screen On**
+
+Keep the screen on while you're on the Downloads page until all pending downloads are finished.
+
+This can be useful if your OS tends to kill downloads while you're sleeping.
+
+---
+
+## New: Expanded File Type Icons
+
+Downloads now have more specific file type icons.
+
+The file type system has been expanded from 6 icon categories covering around 140 extensions to 19 categories. New dedicated icons have been added for PDFs, spreadsheets, presentations, ebooks, subtitles, source code, fonts, design files, databases, installers and executables, certificates, calendars and contacts, torrents, and more.
+
+---
+
+## Changes Outside Downloads
+
+### New Browser Setting: Custom Select Menus
+
+Added a new setting under **Browser Settings**:
+
+**Custom Select Menus**
+
+Use Clint's custom picker for `<select>` dropdowns instead of the WebView default.
+
+This feature has actually been in Clint for a while, but there was previously no way to turn it off. You can now disable it from Browser Settings.
+
+More options for overriding the ugly default WebView UI will be added in the future.
+
+---
+
+## Bug Fixes
+
+- Fixed `SelectPickerDialog.kt` breaking on some websites. The title and description have now been removed from the picker to prevent this issue from happening again.
+
+---
+
+## Dependency Updates
+
+- Bump `androidx.compose:compose-bom` from 2026.08.00 to 2026.09.00 by @dependabot[bot] in #51
+- Bump `org.bouncycastle:bcprov-jdk18on` from 1.85.2 to 1.86 by @dependabot[bot] in #50
+- Bump `org.jetbrains.kotlin.plugin.compose` from 2.4.10 to 2.4.20 by @dependabot[bot] in #49
+
+---
+
+> *And yeah, I'm still working on improving Clint's download manager and making it better. So feel free to report any bugs you find, and we'll work on fixing them!*
+
+
 # v1.1.5
 
 ---

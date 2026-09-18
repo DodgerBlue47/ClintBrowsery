@@ -19,6 +19,7 @@ class DownloadsUiState {
     var isInSelectionMode by mutableStateOf(false)
 
     var sortMenuOpen by mutableStateOf(false)
+    var overflowMenuOpen by mutableStateOf(false)
     var selectionOptionsMenuOpen by mutableStateOf(false)
     var multiItemOptionsMenuOpen by mutableStateOf(false)
 

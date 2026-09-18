@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
@@ -27,10 +28,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -48,6 +51,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -89,13 +93,20 @@ internal fun AddressBarRow(
     addressBarText: String,
     isSecure: Boolean,
     tabCountText: String,
+    isMediaCaptureEnabled: Boolean,
+    activeTabId: String?,
     onAddressBarClick: () -> Unit,
     onTabCountClick: () -> Unit,
+    onMediaCaptureClick: () -> Unit,
     onSwipeTabChange: (Int) -> Boolean,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalClintColors.current
     val density = LocalDensity.current
+    val mediaCaptureCount = if (isMediaCaptureEnabled && activeTabId != null) {
+        val items by com.jhaiian.clint.mediacapture.MediaCaptureStore.observe(activeTabId).collectAsState()
+        items.size
+    } else 0
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var swipeDirection by remember { mutableIntStateOf(0) }
     val swipeThresholdPx = with(density) { 56.dp.toPx() }
@@ -183,6 +194,50 @@ internal fun AddressBarRow(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+            }
+        }
+        if (isMediaCaptureEnabled) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .size(34.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(onClick = onMediaCaptureClick)
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Filled.VideoLibrary,
+                        contentDescription = stringResource(R.string.menu_media_capture),
+                        tint = colors.iconTint,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                if (mediaCaptureCount > 0) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 2.dp, y = (-2).dp)
+                            .defaultMinSize(minWidth = 13.dp)
+                            .height(13.dp)
+                            .clip(RoundedCornerShape(6.5.dp))
+                            .background(colors.primary)
+                            .padding(horizontal = 3.dp)
+                    ) {
+                        Text(
+                            text = com.jhaiian.clint.quiver.engine.BlockedRequestCounter.formatCount(mediaCaptureCount.toLong()),
+                            color = colors.onPrimary,
+                            fontSize = 9.sp,
+                            lineHeight = 9.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

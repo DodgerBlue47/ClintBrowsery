@@ -1,5 +1,6 @@
 package com.jhaiian.clint.settings.browser
 import androidx.compose.material.icons.automirrored.filled.ManageSearch
+import androidx.compose.material.icons.filled.ArrowDropDownCircle
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -33,7 +34,8 @@ fun BrowserSettingsScreen(
     onWebsiteBlockerRowClicked: () -> Unit,
     onQuiverGuardRowClicked: () -> Unit,
     onIncognitoSearchHistoryRowClicked: () -> Unit,
-    onUserScriptsRowClicked: () -> Unit
+    onUserScriptsRowClicked: () -> Unit,
+    onCustomSelectMenusRowClicked: () -> Unit
 ) {
     val colors = LocalClintColors.current
 
@@ -99,6 +101,20 @@ fun BrowserSettingsScreen(
                 summary = stringResource(R.string.user_scripts_settings_summary),
                 colors = colors,
                 onClick = onUserScriptsRowClicked
+            )
+        }
+
+        SectionLabel(stringResource(R.string.pref_category_custom_prompts).uppercase(), colors.primary, Modifier.padding(start = 4.dp, bottom = 8.dp))
+        SettingsSection(colors.cardBackground) {
+            SettingsRow(
+                icon = androidx.compose.material.icons.Icons.Filled.ArrowDropDownCircle,
+                title = stringResource(R.string.custom_select_menus_title),
+                summary = stringResource(R.string.custom_select_menus_summary),
+                colors = colors,
+                onClick = onCustomSelectMenusRowClicked,
+                trailing = {
+                    ClintSwitch(checked = state.customSelectMenus)
+                }
             )
         }
 
